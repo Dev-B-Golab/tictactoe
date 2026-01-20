@@ -1,19 +1,39 @@
 <template>
-  <div>
-    <h2 v-if="winner && draw==false">Winner: {{ winnerName }} </h2> 
-    <h2 v-if="draw==true">Draw! Play again</h2>
-    <h2 v-if="!winner && draw==false">Players Move: {{ playerName }}</h2>
-    <button @click="reset" class="btn primaryColor btn-lg">Reset</button>
+  <div class="game-container">
+    <div class="status">
+      <h2 v-if="winner" :class="{ youWin: winnerName !== 'Computer' }">
+        🎉 Winner: {{ winnerName }}!
+      </h2>
+      <h2 v-else-if="draw">🤝 Draw! Play again</h2>
+      <h2 v-else>
+        <span v-if="isPlayerTurn">Your turn, {{ playerName }}!</span>
+        <span v-else>Computer is thinking...</span>
+      </h2>
+    </div>
+    
     <div class="boardGame">
-      <table class="table">
-        <tr v-for="(row, x) in squares" :key="x" class="rows">
-          <td v-for="(cell, y) in row" :key="y" class="col-3 board" @click="move(x,y)"
-          :class="{ computerColor: squares[x][y] == 'O', playerColor: squares[x][y] == 'X'}">
+      <table class="game-table">
+        <tr v-for="(row, x) in squares" :key="x">
+          <td 
+            v-for="(cell, y) in row" 
+            :key="y" 
+            class="board" 
+            @click="playerMove(x, y)"
+            :class="{ 
+              computerColor: squares[x][y] === 'O', 
+              playerColor: squares[x][y] === 'X',
+              disabled: !isPlayerTurn || winner || draw
+            }"
+          >
             {{ squares[x][y] }}
           </td>
         </tr>
       </table>
     </div>
+    
+    <button @click="reset" class="btn primaryColor btn-lg reset-btn">
+      🔄 New Game
+    </button>
   </div>
 </template>
 
@@ -23,167 +43,258 @@ import { mapState } from 'vuex'
 export default {
   data() {
     return {
-      playerMark: 'X',
       playerName: 'Player',
       winnerName: '',
       winner: false,
-      btnDisabled: true,
-      moveCount: 0,
       draw: false,
+      isPlayerTurn: true,
       squares: [
-        ['','',''],
-        ['','',''],
-        ['','','']
-      ],
-      playerMoves:[],
-      computerMoves:[],
-      checkTable: null,
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
+      ]
     }
   },
   created() {
-    this.playerName = this.nickname != '' ? this.nickname : 'Player';
+    this.playerName = this.nickname !== '' ? this.nickname : 'Player'
   },
   computed: {
-    ...mapState(['nickname']),
+    ...mapState(['nickname'])
   },
   methods: {
-    move(x,y){
-      if(this.squares[x][y] || this.btnDisabled == false) return
-      this.squares[x][y] = this.playerMark
-      this.disableButton()
-      this.playerMark == 'X' ? this.playerMove(x,y) : this.computerMove(x,y);
-      this.playerMark = this.playerMark == 'X' ? 'O' : 'X'
-      this.moveCount++;
+    playerMove(x, y) {
+      // Sprawdź czy ruch jest dozwolony
+      if (this.squares[x][y] !== '' || !this.isPlayerTurn || this.winner || this.draw) {
+        return
+      }
 
+      // Wykonaj ruch gracza
+      this.squares[x][y] = 'X'
       
-      this.checkDraw();
-
-      //computer move unlock buttons
-      setTimeout( () => {
-            return this.disableButton(); 
-        }, 500);
+      // Sprawdź wygraną gracza
+      if (this.checkWinner('X')) {
+        this.winner = true
+        this.winnerName = this.playerName
+        return
+      }
       
-    },
-
-    playerMove(x,y){
-      this.playerMoves.push({x,y})
-      this.checkWinner(this.playerMoves);
-      this.playerName = 'Computer'
-    },
-
-    computerMove(x,y){
-      this.computerMoves.push({x,y})
-      this.checkWinner(this.computerMoves);
-      this.playerName = this.nickname != '' ? this.nickname : 'Player'
-    },
-
-    checkWinner(markTable, boardSize=3) {
-      const winningConditions = [];
-
-      // Sprawdzenie pionowych linii
-      for (let i = 0; i < boardSize; i++) {
-        const condition = [];
-        for (let j = 0; j < boardSize; j++) {
-          condition.push([j, i]);
-        }
-        winningConditions.push(condition);
+      // Sprawdź remis
+      if (this.checkDraw()) {
+        this.draw = true
+        return
       }
 
-      // Sprawdzenie poziomych linii
-      for (let i = 0; i < boardSize; i++) {
-        const condition = [];
-        for (let j = 0; j < boardSize; j++) {
-          condition.push([i, j]);
-        }
-        winningConditions.push(condition);
-      }
+      // Tura komputera
+      this.isPlayerTurn = false
+      setTimeout(() => {
+        this.computerMove()
+      }, 500)
+    },
 
-      // Sprawdzenie przekątnych
-      const diagonal1 = [];
-      const diagonal2 = [];
-      for (let i = 0; i < boardSize; i++) {
-        diagonal1.push([i, i]);
-        diagonal2.push([i, boardSize - 1 - i]);
-      }
-      winningConditions.push(diagonal1, diagonal2);
-
-      for (const condition of winningConditions) {
-        let winnerFound = true;
-        let prevValue = null;
-        for (const [x, y] of condition) {
-          const cell = markTable.find(cell => cell.x === x && cell.y === y);
-          if (!cell || (prevValue && prevValue !== cell.value)) {
-            winnerFound = false;
-            break;
-          }
-          prevValue = cell.value;
+    computerMove() {
+      // Znajdź najlepszy ruch dla komputera (prosta AI)
+      const move = this.findBestMove()
+      
+      if (move) {
+        this.squares[move.x][move.y] = 'O'
+        
+        // Sprawdź wygraną komputera
+        if (this.checkWinner('O')) {
+          this.winner = true
+          this.winnerName = 'Computer'
+          return
         }
-        if (winnerFound) {
-          this.disableButton();
-          this.winner = true;
-          this.winnerName = this.playerName;
-          return;
+        
+        // Sprawdź remis
+        if (this.checkDraw()) {
+          this.draw = true
+          return
         }
       }
+      
+      this.isPlayerTurn = true
     },
 
-    checkDraw(){
-      if (this.moveCount >= 9 && this.winner == false) {
-         this.draw = true;
-         this.disableButton();
-         return null
+    findBestMove() {
+      // 1. Spróbuj wygrać
+      const winMove = this.findWinningMove('O')
+      if (winMove) return winMove
+
+      // 2. Zablokuj gracza
+      const blockMove = this.findWinningMove('X')
+      if (blockMove) return blockMove
+
+      // 3. Weź środek
+      if (this.squares[1][1] === '') {
+        return { x: 1, y: 1 }
       }
-    },
 
-      disableButton(){
-      return this.btnDisabled = !this.btnDisabled 
-    },
-
-    reset(){
-      this.playerMark = 'X'
-      this.playerName = this.nickname != '' ? this.nickname : 'Player';
-      this.squares = [
-        ['','',''],
-        ['','',''],
-        ['','','']
+      // 4. Weź róg
+      const corners = [
+        { x: 0, y: 0 }, { x: 0, y: 2 },
+        { x: 2, y: 0 }, { x: 2, y: 2 }
       ]
-      this.btnDisabled = true
-      this.draw = false
-      this.playerMoves=[],
-      this.computerMoves=[],
-      this.moveCount = 0
-      this.winner = false;
+      const availableCorner = corners.find(c => this.squares[c.x][c.y] === '')
+      if (availableCorner) return availableCorner
+
+      // 5. Weź dowolne wolne pole
+      for (let x = 0; x < 3; x++) {
+        for (let y = 0; y < 3; y++) {
+          if (this.squares[x][y] === '') {
+            return { x, y }
+          }
+        }
+      }
+      return null
     },
+
+    findWinningMove(mark) {
+      const lines = [
+        // Wiersze
+        [[0, 0], [0, 1], [0, 2]],
+        [[1, 0], [1, 1], [1, 2]],
+        [[2, 0], [2, 1], [2, 2]],
+        // Kolumny
+        [[0, 0], [1, 0], [2, 0]],
+        [[0, 1], [1, 1], [2, 1]],
+        [[0, 2], [1, 2], [2, 2]],
+        // Przekątne
+        [[0, 0], [1, 1], [2, 2]],
+        [[0, 2], [1, 1], [2, 0]]
+      ]
+
+      for (const line of lines) {
+        const values = line.map(([x, y]) => this.squares[x][y])
+        const markCount = values.filter(v => v === mark).length
+        const emptyCount = values.filter(v => v === '').length
+
+        if (markCount === 2 && emptyCount === 1) {
+          const emptyIndex = values.findIndex(v => v === '')
+          return { x: line[emptyIndex][0], y: line[emptyIndex][1] }
+        }
+      }
+      return null
+    },
+
+    checkWinner(mark) {
+      const lines = [
+        // Wiersze
+        [[0, 0], [0, 1], [0, 2]],
+        [[1, 0], [1, 1], [1, 2]],
+        [[2, 0], [2, 1], [2, 2]],
+        // Kolumny
+        [[0, 0], [1, 0], [2, 0]],
+        [[0, 1], [1, 1], [2, 1]],
+        [[0, 2], [1, 2], [2, 2]],
+        // Przekątne
+        [[0, 0], [1, 1], [2, 2]],
+        [[0, 2], [1, 1], [2, 0]]
+      ]
+
+      return lines.some(line => 
+        line.every(([x, y]) => this.squares[x][y] === mark)
+      )
+    },
+
+    checkDraw() {
+      return this.squares.every(row => row.every(cell => cell !== ''))
+    },
+
+    reset() {
+      this.squares = [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
+      ]
+      this.winner = false
+      this.draw = false
+      this.winnerName = ''
+      this.isPlayerTurn = true
+      this.playerName = this.nickname !== '' ? this.nickname : 'Player'
+    }
   }
-};
+}
 </script>
 
 <style scoped>
-  table td{
-    border: solid 3px var(--primary-color);
-  }
-  td:hover{
-    background-color: #2B3A48;
-    cursor:pointer;
-  }
-  .board{
-    max-width: 250px;
-    max-height: 250px;
-    min-height: 100px;
-    min-width: 100px;
-    height: 33%;
-    height:200px;
-    aspect-ratio: 1/1;
-    font-size: 125px;
-  }
-  .boardGame{
-    height:400px;
-  }
-  .youWin {
-  animation: youWin 1s ease infinite;
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.status h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.boardGame {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.game-table {
+  border-collapse: collapse;
+}
+
+.board {
+  width: 100px;
+  height: 100px;
+  border: 3px solid var(--primary-color);
+  font-size: 60px;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.board:hover:not(.disabled) {
+  background-color: #2B3A48;
+}
+
+.board.disabled {
+  cursor: not-allowed;
+}
+
+.playerColor {
+  color: var(--player-color);
+}
+
+.computerColor {
+  color: var(--computer-color);
+}
+
+.reset-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.reset-btn:hover {
+  transform: scale(1.05);
+}
+
+.youWin {
+  animation: youWin 0.5s ease infinite;
 }
 
 @keyframes youWin {
-  50% {  color: var(--winner-color); }
+  0%, 100% { color: var(--primary-color); }
+  50% { color: var(--winner-color); }
+}
+
+@media (min-width: 600px) {
+  .board {
+    width: 150px;
+    height: 150px;
+    font-size: 90px;
+  }
 }
 </style>

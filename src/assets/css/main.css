@@ -1,53 +1,87 @@
-:root{
-    --background-color:#3C5266;
+:root {
+    --background-color: #3C5266;
     --primary-color: #D6E615;
     --secondary-color: #8A913D;
     --player-color: #1582E6;
     --computer-color: #AE0800;
     --winner-color: #0fff17;
-    --input-text-color:#000000;
-    
-}
-input::-webkit-input-placeholder {/* Chrome/Opera/Safari/Edge */
-	color: var(--input-text-color);
-    text-align: center;
-    opacity: 70%;
+    --input-text-color: #000000;
 }
 
-input::-ms-input-placeholder { /* Microsoft Edge */
-    color: var(--input-text-color);
-    text-align: center;
-    opacity: 70%;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-input:-ms-input-placeholder {/* IE 10+ */
-	color: var(--input-text-color);
-    text-align: center;
-    opacity: 70%;
-}
-*{
-    margin-top: 15px;
+body {
     background-color: var(--background-color);
     color: var(--primary-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
 
+#app {
+    background-color: var(--background-color);
 }
-.primaryColor{
-    background-color:var(--primary-color);
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--background-color);
+}
+
+.text-center {
+    text-align: center;
+}
+
+header h1 {
+    font-size: 48px;
+    margin: 20px 0 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    background-color: transparent;
+}
+
+input::-webkit-input-placeholder {
+    color: var(--input-text-color);
+    text-align: center;
+    opacity: 0.7;
+}
+
+input::-ms-input-placeholder {
+    color: var(--input-text-color);
+    text-align: center;
+    opacity: 0.7;
+}
+
+input:-ms-input-placeholder {
+    color: var(--input-text-color);
+    text-align: center;
+    opacity: 0.7;
+}
+
+.primaryColor {
+    background-color: var(--primary-color);
     color: var(--input-text-color);
 }
-button.primaryColor:hover{
-    background-color:var(--secondary-color);
+
+button.primaryColor:hover {
+    background-color: var(--secondary-color);
     color: var(--input-text-color);
 }
-.playerColor{
-    color:var(--player-color);
+
+.playerColor {
+    color: var(--player-color);
     font-weight: bold;
 }
-.computerColor{
-    color:var(--computer-color);
+
+.computerColor {
+    color: var(--computer-color);
     font-weight: bold;
 }
-.error{
+
+.error {
     color: var(--computer-color);
     font-weight: bold;
 }
