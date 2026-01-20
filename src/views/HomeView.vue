@@ -176,7 +176,8 @@ const difficulties = [
   background: var(--primary-color);
   border-radius: 50%;
   animation: floatParticle 15s infinite linear;
-  opacity: 0.3;
+  opacity: 0;
+  top: 100vh;
 }
 
 .particle:nth-child(odd) {
@@ -189,17 +190,17 @@ const difficulties = [
 
 @keyframes floatParticle {
   0% {
-    transform: translateY(100vh) rotate(0deg);
+    transform: translateY(0) rotate(0deg);
     opacity: 0;
   }
-  10% {
+  5% {
     opacity: 0.3;
   }
-  90% {
+  95% {
     opacity: 0.3;
   }
   100% {
-    transform: translateY(-100vh) rotate(720deg);
+    transform: translateY(-200vh) rotate(720deg);
     opacity: 0;
   }
 }
