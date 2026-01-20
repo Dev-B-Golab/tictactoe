@@ -4,7 +4,6 @@ A modern, interactive Tic Tac Toe game built with Vue. js 3, featuring real-time
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.3.11-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5.0.11-646CFF?style=flat-square&logo=vite&logoColor=white)
-![Socket.io](https://img.shields.io/badge/Socket.io-4.7.4-010101? style=flat-square&logo=socket.io&logoColor=white)
 
 ## ✨ Features
 
