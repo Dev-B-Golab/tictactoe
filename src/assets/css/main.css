@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap');
-
 :root {
     --background-color: #0a0a1a;
     --primary-color: #00ff88;
@@ -24,12 +22,26 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
     background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%);
+    background-attachment: fixed;
+    background-color: var(--background-color);
     color: var(--primary-color);
     font-family: 'Orbitron', sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    font: inherit;
+    touch-action: manipulation;
 }
 
 body::before {
@@ -50,12 +62,13 @@ body::before {
 #app {
     background: transparent;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .container {
     max-width: 900px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 20px max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     background: transparent;
 }
 
@@ -65,8 +78,9 @@ body::before {
 
 header h1 {
     font-family: 'Press Start 2P', cursive;
-    font-size: 28px;
-    margin: 30px 0 40px;
+    font-size: clamp(18px, 6vw, 36px);
+    line-height: 1.3;
+    margin: clamp(8px, 3vh, 30px) 0 clamp(16px, 4vh, 40px);
     background: linear-gradient(90deg, #00ff88, #00ffff, #ff00ff, #00ff88);
     background-size: 300% 100%;
     -webkit-background-clip: text;
@@ -122,12 +136,23 @@ header h1 {
 
 .arcade-btn:hover {
     box-shadow: var(--glow-green);
-    transform: scale(1.05);
     background: rgba(0, 255, 136, 0.1);
+}
+
+/* Scale only on real hover - on touch screens :hover sticks after a tap */
+@media (hover: hover) {
+    .arcade-btn:hover {
+        transform: scale(1.05);
+    }
 }
 
 .arcade-btn:active {
     transform: scale(0.98);
+}
+
+.arcade-btn:focus-visible {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 3px;
 }
 
 .arcade-btn.pink {
@@ -211,9 +236,11 @@ header h1 {
     transition: all 0.3s ease;
 }
 
-.arcade-card:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 40px rgba(0, 255, 136, 0.2);
+@media (hover: hover) {
+    .arcade-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 40px rgba(0, 255, 136, 0.2);
+    }
 }
 
 /* Input Styles */
@@ -255,37 +282,7 @@ header h1 {
     box-shadow: var(--glow-pink);
 }
 
-/* Scanline effect */
-.scanlines::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.1) 0px,
-        rgba(0, 0, 0, 0.1) 1px,
-        transparent 1px,
-        transparent 2px
-    );
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.3;
-}
-
 /* Animations */
-@keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(180deg); }
-}
-
-@keyframes flicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
-}
-
 @keyframes neonBlink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
@@ -313,30 +310,30 @@ header h1 {
     }
 }
 
-@keyframes bounceIn {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.error {
-    color: var(--computer-color);
-    font-weight: bold;
-    text-shadow: 0 0 10px var(--computer-color);
-}
-
 /* Responsive */
 @media (max-width: 600px) {
-    header h1 {
-        font-size: 16px;
+    .container {
+        padding-top: max(12px, env(safe-area-inset-top));
     }
-    
+
     .arcade-btn {
-        padding: 12px 25px;
-        font-size: 12px;
+        min-height: 48px;
+        padding: 12px 20px;
+        font-size: 13px;
+        letter-spacing: 1px;
     }
-    
+
     .arcade-card {
         padding: 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

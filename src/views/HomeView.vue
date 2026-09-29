@@ -1,21 +1,26 @@
 <script setup>
-import { ref } from 'vue'
-import { useStore } from 'vuex'
+import { ref, nextTick } from 'vue'
+import { useGameStore } from '../stores/game'
 import { useRouter } from 'vue-router'
 
-const store = useStore()
+const store = useGameStore()
 const router = useRouter()
 
+// Pre-fill with the previous session so "Main Menu" -> replay is quick
 const step = ref(1) // 1: mode selection, 2: name input, 3: difficulty (for vs bot)
 const gameMode = ref('') // 'bot' or 'pvp'
-const player1Name = ref('')
-const player2Name = ref('')
-const difficulty = ref('medium')
+const player1Name = ref(store.player1Name)
+const player2Name = ref(store.gameMode === 'pvp' ? store.player2Name : '')
+const difficulty = ref(store.difficulty)
 const error = ref('')
+const player1Input = ref(null)
 
-const selectMode = (mode) => {
+const selectMode = async (mode) => {
   gameMode.value = mode
+  error.value = ''
   step.value = 2
+  await nextTick()
+  player1Input.value?.focus()
 }
 
 const goBack = () => {
@@ -42,7 +47,7 @@ const submitNames = () => {
 }
 
 const startGame = () => {
-  store.commit('setGameSettings', {
+  store.setGameSettings({
     player1Name: player1Name.value.trim(),
     player2Name: gameMode.value === 'pvp' ? player2Name.value.trim() : 'CPU',
     gameMode: gameMode.value,
@@ -62,7 +67,7 @@ const difficulties = [
 
 <template>
   <main class="home-view">
-    <div class="particles">
+    <div class="particles" aria-hidden="true">
       <div class="particle" v-for="n in 20" :key="n"></div>
     </div>
     
@@ -71,12 +76,12 @@ const difficulties = [
       <h2 class="section-title">SELECT MODE</h2>
       <div class="mode-buttons">
         <button class="arcade-btn cyan mode-btn" @click="selectMode('bot')">
-          <span class="mode-icon">🤖</span>
+          <span class="mode-icon" aria-hidden="true">🤖</span>
           <span class="mode-text">VS Computer</span>
           <span class="mode-desc">Challenge the AI</span>
         </button>
         <button class="arcade-btn pink mode-btn" @click="selectMode('pvp')">
-          <span class="mode-icon">👥</span>
+          <span class="mode-icon" aria-hidden="true">👥</span>
           <span class="mode-text">2 Players</span>
           <span class="mode-desc">Play with a friend</span>
         </button>
@@ -89,34 +94,41 @@ const difficulties = [
       <h2 class="section-title">ENTER NAMES</h2>
       
       <div class="input-group">
-        <label class="input-label">
+        <label class="input-label" for="player1-name">
           <span class="player-indicator p1">P1</span> Player 1
         </label>
-        <input 
-          type="text" 
+        <input
+          id="player1-name"
+          ref="player1Input"
+          type="text"
           class="arcade-input"
           v-model="player1Name"
           placeholder="Enter name..."
           maxlength="12"
+          autocomplete="off"
+          :enterkeyhint="gameMode === 'pvp' ? 'next' : 'go'"
           @keyup.enter="submitNames"
         >
       </div>
       
       <div v-if="gameMode === 'pvp'" class="input-group">
-        <label class="input-label">
+        <label class="input-label" for="player2-name">
           <span class="player-indicator p2">P2</span> Player 2
         </label>
-        <input 
-          type="text" 
+        <input
+          id="player2-name"
+          type="text"
           class="arcade-input pink"
           v-model="player2Name"
           placeholder="Enter name..."
           maxlength="12"
+          autocomplete="off"
+          enterkeyhint="go"
           @keyup.enter="submitNames"
         >
       </div>
       
-      <p v-if="error" class="error-message">⚠️ {{ error }}</p>
+      <p v-if="error" class="error-message" role="alert">⚠️ {{ error }}</p>
       
       <button class="arcade-btn filled" @click="submitNames">
         {{ gameMode === 'pvp' ? '🎮 START GAME' : 'NEXT →' }}
@@ -134,9 +146,10 @@ const difficulties = [
           :key="diff.id"
           class="difficulty-btn"
           :class="[diff.color, { active: difficulty === diff.id }]"
+          :aria-pressed="difficulty === diff.id"
           @click="difficulty = diff.id"
         >
-          <span class="diff-icon">{{ diff.icon }}</span>
+          <span class="diff-icon" aria-hidden="true">{{ diff.icon }}</span>
           <span class="diff-name">{{ diff.name }}</span>
           <span class="diff-desc">{{ diff.desc }}</span>
         </button>
@@ -153,8 +166,7 @@ const difficulties = [
 .home-view {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 70vh;
+  align-items: flex-start;
   position: relative;
 }
 
@@ -230,8 +242,8 @@ const difficulties = [
   position: relative;
   z-index: 1;
   animation: slideIn 0.5s ease;
-  min-width: 350px;
-  max-width: 500px;
+  width: 100%;
+  max-width: 460px;
 }
 
 .section-title {
@@ -245,8 +257,10 @@ const difficulties = [
 
 .back-btn {
   position: absolute;
-  top: 15px;
-  left: 15px;
+  top: 8px;
+  left: 8px;
+  min-height: 44px;
+  padding: 0 12px;
   background: transparent;
   border: none;
   color: var(--primary-color);
@@ -256,7 +270,8 @@ const difficulties = [
   transition: all 0.3s ease;
 }
 
-.back-btn:hover {
+.back-btn:hover,
+.back-btn:focus-visible {
   color: var(--accent-color);
   text-shadow: 0 0 10px var(--accent-color);
 }
@@ -336,6 +351,7 @@ const difficulties = [
 .arcade-input {
   display: block;
   margin: 0 auto;
+  max-width: none;
 }
 
 .error-message {
@@ -396,33 +412,45 @@ const difficulties = [
   color: var(--secondary-color);
 }
 
-.difficulty-btn:hover,
-.difficulty-btn.active {
-  transform: scale(1.05);
+.difficulty-btn:not(.active) {
+  opacity: 0.75;
 }
 
-.difficulty-btn.green:hover,
+.difficulty-btn.active {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.difficulty-btn:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
 .difficulty-btn.green.active {
   box-shadow: var(--glow-green);
   background: rgba(0, 255, 136, 0.1);
 }
 
-.difficulty-btn.yellow:hover,
 .difficulty-btn.yellow.active {
   box-shadow: var(--glow-yellow);
   background: rgba(255, 170, 0, 0.1);
 }
 
-.difficulty-btn.red:hover,
 .difficulty-btn.red.active {
   box-shadow: var(--glow-red);
   background: rgba(255, 51, 102, 0.1);
 }
 
-.difficulty-btn.pink:hover,
 .difficulty-btn.pink.active {
   box-shadow: var(--glow-pink);
   background: rgba(255, 0, 255, 0.1);
+}
+
+@media (hover: hover) {
+  .difficulty-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 .diff-icon {
@@ -437,8 +465,8 @@ const difficulties = [
 }
 
 .diff-desc {
-  font-size: 9px;
-  opacity: 0.7;
+  font-size: 10px;
+  opacity: 0.8;
 }
 
 .difficulty-selection .arcade-btn {
@@ -448,26 +476,57 @@ const difficulties = [
 
 @media (max-width: 500px) {
   .arcade-card {
-    min-width: 300px;
-    padding: 20px;
+    padding: 20px 16px;
   }
-  
+
+  .name-input,
+  .difficulty-selection {
+    padding-top: 56px;
+  }
+
   .section-title {
     font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
   }
-  
+
+  .mode-buttons {
+    gap: 14px;
+  }
+
   .mode-btn {
-    padding: 20px;
-    min-height: 100px;
+    padding: 18px 12px;
+    min-height: 0;
   }
-  
+
   .mode-icon {
     font-size: 30px;
   }
-  
+
+  .mode-text {
+    font-size: 15px;
+  }
+
   .difficulty-grid {
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
+  }
+
+  .difficulty-btn {
+    padding: 14px 8px;
+  }
+
+  .diff-icon {
+    font-size: 24px;
+  }
+
+  .diff-name {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particles {
+    display: none;
   }
 }
 </style>

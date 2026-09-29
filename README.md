@@ -1,24 +1,25 @@
 # 🎮 Tic Tac Toe
 
-A modern, interactive Tic Tac Toe game built with Vue. js 3, featuring real-time multiplayer capabilities powered by Socket.io.
+An arcade-style Tic Tac Toe game built with Vue.js 3 — play against a friend on the same device or challenge an AI with four difficulty levels.
 
-![Vue.js](https://img.shields.io/badge/Vue.js-3.3.11-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-5.0.11-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.4-646CFF?style=flat-square&logo=vite&logoColor=white)
 
 ## ✨ Features
 
 - 🎯 **Classic Gameplay** - Traditional Tic Tac Toe rules
-- 🌐 **Real-time Multiplayer** - Play with friends using Socket.io
-- 🎨 **Modern UI** - Clean and responsive design
-- ⚡ **Fast Performance** - Built with Vite for optimal speed
-- 📱 **Responsive Design** - Works on desktop and mobile devices
-- 🔄 **State Management** - Powered by Vuex for reliable game state
+- 🤖 **VS Computer** - Four AI levels: Easy, Medium, Hard and Impossible (unbeatable minimax)
+- 👥 **2 Players** - Local hot-seat mode on one device
+- 🔁 **Fair Rounds** - The starting player alternates every round
+- 💾 **Saved Progress** - Names, settings and scores survive a page refresh
+- 📱 **Mobile First** - Board scales to fit any screen, touch friendly
+- ♿ **Accessible** - Keyboard playable, screen-reader labels, respects reduced motion
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js 18 or higher (20+ recommended)
 - npm or yarn
 
 ### Installation
@@ -50,6 +51,12 @@ npm run build
 
 The optimized production files will be generated in the `dist` folder.
 
+### Run Tests
+
+```bash
+npm test
+```
+
 ### Preview Production Build
 
 ```bash
@@ -61,8 +68,8 @@ npm run preview
 - **Framework**: [Vue.js 3](https://vuejs.org/) - Progressive JavaScript framework
 - **Build Tool**: [Vite](https://vitejs.dev/) - Next generation frontend tooling
 - **Router**: [Vue Router 4](https://router.vuejs.org/) - Official routing library
-- **State Management**: [Vuex 4](https://vuex.vuejs.org/) - State management pattern
-- **Real-time Communication**: [Socket.io 4](https://socket.io/) - Bidirectional event-based communication
+- **State Management**: [Pinia](https://pinia.vuejs.org/) - Official Vue store
+- **Testing**: [Vitest](https://vitest.dev/) - Unit tests for the game logic and AI
 
 ## 📁 Project Structure
 
@@ -72,10 +79,12 @@ tictactoe/
 ├── src/
 │   ├── assets/      # Styles, images, and other assets
 │   ├── components/  # Vue components
+│   ├── game/        # Pure game logic & AI (+ tests)
 │   ├── router/      # Vue Router configuration
+│   ├── stores/      # Pinia stores (persisted to localStorage)
 │   ├── views/       # Page components
 │   ├── App.vue      # Root component
-│   └── main. js      # Application entry point
+│   └── main.js      # Application entry point
 ├── index.html       # HTML template
 ├── package.json     # Project dependencies
 └── vite.config.js   # Vite configuration
@@ -83,10 +92,11 @@ tictactoe/
 
 ## 🎮 How to Play
 
-1. Choose to play against a friend (multiplayer mode)
-2. Players take turns marking spaces on the 3×3 grid
-3. The first player to get three marks in a row (horizontally, vertically, or diagonally) wins
-4. If all spaces are filled without a winner, the game ends in a draw
+1. Choose to play against the computer or a friend
+2. Enter player names (and pick a difficulty when playing the computer)
+3. Players take turns marking spaces on the 3×3 grid
+4. The first player to get three marks in a row (horizontally, vertically, or diagonally) wins
+5. If all spaces are filled without a winner, the game ends in a draw
 
 ## 🤝 Contributing
 

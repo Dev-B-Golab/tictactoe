@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import Game from '../views/Game.vue'
-
+import { useGameStore } from '../stores/game'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,8 +13,13 @@ const router = createRouter({
     {
       path: '/game',
       name: 'Game',
-      props: true,
-      component: Game
+      component: () => import('../views/Game.vue'),
+      // Without player setup there is nothing to play - send back to the menu
+      beforeEnter: () => (useGameStore().hasSettings ? true : { name: 'main' })
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: { name: 'main' }
     }
   ]
 })
